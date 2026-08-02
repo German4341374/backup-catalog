@@ -1,0 +1,10 @@
+.git
+.github
+.tools
+.env
+build
+coverage
+docs
+var
+vendor
+*.md

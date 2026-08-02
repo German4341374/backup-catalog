@@ -1,0 +1,7 @@
+services:
+  app:
+    build:
+      target: production
+    environment:
+      APP_ENV: production
+      APP_DEBUG: "false"
