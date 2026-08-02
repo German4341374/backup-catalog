@@ -47,7 +47,7 @@ services:
       - /tmp:size=32m,mode=1777
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    networks: [backend]
+    networks: [frontend, backend]
     restart: unless-stopped
 
   nginx:
@@ -73,12 +73,13 @@ services:
       - /var/run:size=1m
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
-    networks: [backend]
+    networks: [frontend]
     restart: unless-stopped
 
 volumes:
   postgres-data:
 
 networks:
+  frontend:
   backend:
     internal: true
