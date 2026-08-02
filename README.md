@@ -88,7 +88,7 @@ erDiagram
 
 - Docker Engine 27+ with Docker Compose v2.
 - GNU Make is optional. On Windows, use Docker Desktop with the WSL2 backend and run commands from an Ubuntu WSL terminal.
-- For a native workflow: PHP 8.5, Composer 2.8, and PostgreSQL 18.
+- For a native workflow: PHP 8.5, Composer 2.10, and PostgreSQL 18.
 
 ## Docker setup
 

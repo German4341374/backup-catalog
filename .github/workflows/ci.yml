@@ -48,7 +48,7 @@ jobs:
           php-version: "8.5"
           extensions: pdo_pgsql
           coverage: none
-          tools: composer:2.8.12
+          tools: composer:2.10.2
           github-token: ""
 
       - name: Validate dependency metadata
