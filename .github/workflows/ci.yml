@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: PHP quality and tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18.4-alpine3.24@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15
+        env:
+          POSTGRES_DB: backup_catalog_test
+          POSTGRES_USER: backup_catalog
+          POSTGRES_PASSWORD: backup_catalog_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U backup_catalog -d backup_catalog_test"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 12
+    env:
+      TEST_DATABASE_DSN: pgsql:host=127.0.0.1;port=5432;dbname=backup_catalog_test
+      TEST_DATABASE_USER: backup_catalog
+      TEST_DATABASE_PASSWORD: backup_catalog_test
+      DATABASE_DSN: pgsql:host=127.0.0.1;port=5432;dbname=backup_catalog_test
+      DATABASE_USER: backup_catalog
+      DATABASE_PASSWORD: backup_catalog_test
+    steps:
+      - name: Check out source
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Configure PHP and Composer
+        uses: shivammathur/setup-php@bf6b4fbd49ca58e4608c9c89fba0b8d90bd2a39f # v2
+        with:
+          php-version: "8.5"
+          extensions: pdo_pgsql
+          coverage: none
+          tools: composer:2.8.12
+
+      - name: Validate dependency metadata
+        run: composer validate --strict
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Check coding standards
+        run: composer lint
+
+      - name: Run static analysis
+        run: composer analyse
+
+      - name: Audit dependencies
+        run: composer audit --locked --no-interaction
+
+      - name: Run database migrations
+        run: php bin/console migrate
+
+      - name: Run tests
+        run: composer test
+
+      - name: Upload test report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: phpunit-report
+          path: build/junit.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  container:
+    name: Container smoke test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Configure Docker Buildx
+        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
+
+      - name: Validate Compose configuration
+        env:
+          DATABASE_PASSWORD: backup_catalog_local
+        run: docker compose config --quiet
+
+      - name: Build production image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          target: production
+          push: false
+          tags: backup-catalog:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start development stack
+        env:
+          DATABASE_PASSWORD: backup_catalog_local
+        run: docker compose up -d --build --wait
+
+      - name: Verify health and dashboard APIs
+        run: |
+          curl --fail --show-error --silent http://localhost:8080/health | grep '"status":"ok"'
+          curl --fail --show-error --silent http://localhost:8080/api/dashboard | grep 'total_systems'
+
+      - name: Show container logs on failure
+        if: failure()
+        env:
+          DATABASE_PASSWORD: backup_catalog_local
+        run: docker compose logs
+
+      - name: Stop stack
+        if: always()
+        env:
+          DATABASE_PASSWORD: backup_catalog_local
+        run: docker compose down --volumes --remove-orphans

@@ -1,0 +1,13 @@
+parameters:
+  level: 8
+  paths:
+    - src
+    - bootstrap
+    - public
+    - bin
+    - config
+    - tests
+  tmpDir: var/phpstan
+  treatPhpDocTypesAsCertain: false
+  parallel:
+    maximumNumberOfProcesses: 1
