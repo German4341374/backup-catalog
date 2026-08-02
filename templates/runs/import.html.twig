@@ -1,0 +1,16 @@
+{% extends 'base.html.twig' %}{% set active = 'runs' %}
+{% block title %}Import Backup Runs · Backup Catalog{% endblock %}
+{% block content %}
+<header class="page-header"><div><p class="eyebrow">Bulk ingestion</p><h1>Import backup runs</h1><p>Upload up to 5 MB and 5,000 records. External IDs make re-imports safe.</p></div></header>
+<div class="grid half"><section class="panel form-panel"><form method="post" enctype="multipart/form-data" action="/backup-runs/import"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><label class="drop-zone"><span>JSON document</span><input required type="file" name="backup_file" accept="application/json,.json"><small>Use a top-level array or an object with a <code>runs</code> array.</small></label><div class="form-actions"><a href="/backup-runs">Cancel</a><button class="button">Import records</button></div></form></section><section class="panel"><div class="panel-heading"><h2>Required mapping</h2></div><p>Each record resolves <code>system</code> and optional <code>job</code> by name. Every imported item needs a unique <code>externalId</code>.</p><pre><code>{
+  "system": "Customer Portal",
+  "job": "Nightly Full",
+  "externalId": "run-2026-08-02-001",
+  "type": "Full",
+  "status": "Successful",
+  "startedAt": "2026-08-02T01:00:00Z",
+  "completedAt": "2026-08-02T01:28:00Z",
+  "sizeBytes": 4294967296,
+  "storageLocation": "vault://primary/portal"
+}</code></pre></section></div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html.twig' %}
+{% set active = 'dashboard' %}
+{% block title %}Operations Dashboard · Backup Catalog{% endblock %}
+{% block content %}
+<header class="page-header">
+    <div><p class="eyebrow">Operational overview</p><h1>Backup health dashboard</h1><p>Freshness, failures, and stalled jobs across registered business systems.</p></div>
+    <div class="actions"><a class="button secondary" href="/backup-runs/import">Import JSON</a><a class="button" href="/backup-runs/new">Register run</a></div>
+</header>
+
+<section class="metrics" aria-label="Backup health summary">
+    <article><span>Protected systems</span><strong>{{ summary.total_systems }}</strong><small>{{ summary.healthy_systems }} currently healthy</small></article>
+    <article class="{{ summary.overdue_systems > 0 ? 'metric-danger' : '' }}"><span>Attention required</span><strong>{{ summary.overdue_systems }}</strong><small>Overdue or never backed up</small></article>
+    <article class="{{ summary.failed_24h > 0 ? 'metric-warning' : '' }}"><span>Failures · 24h</span><strong>{{ summary.failed_24h }}</strong><small>Completed with failed status</small></article>
+    <article><span>Average backup · 30d</span><strong>{{ summary.average_size_bytes|bytes }}</strong><small>Successful runs only</small></article>
+</section>
+
+<div class="grid two-thirds">
+    <section class="panel">
+        <div class="panel-heading"><div><p class="eyebrow">SLA watch</p><h2>Systems requiring attention</h2></div><a href="/systems?health=Overdue">View all</a></div>
+        {% if overdueSystems is empty %}<div class="empty">All registered systems have a recent successful backup.</div>{% else %}
+        <div class="table-wrap"><table><thead><tr><th>System</th><th>Criticality</th><th>Last success</th><th>Health</th></tr></thead><tbody>
+        {% for system in overdueSystems %}<tr><td><a class="primary-link" href="/systems/{{ system.id }}">{{ system.name }}</a><small>{{ system.owner }}</small></td><td><span class="badge badge-{{ system.criticality|lower }}">{{ system.criticality }}</span></td><td>{{ system.last_successful_at|relative_time }}<small>{{ system.last_successful_at|utc_date }}</small></td><td><span class="badge badge-danger">{{ system.health_status }}</span></td></tr>{% endfor %}
+        </tbody></table></div>{% endif %}
+    </section>
+    <section class="panel">
+        <div class="panel-heading"><div><p class="eyebrow">Last seven days</p><h2>Run status</h2></div></div>
+        <div class="distribution">
+            {% for item in statusDistribution %}<div><span class="status-dot status-{{ item.status|lower }}"></span><span>{{ item.status }}</span><strong>{{ item.count }}</strong></div>{% else %}<div class="empty">No recent runs.</div>{% endfor %}
+        </div>
+        <div class="callout {{ summary.overdue_running > 0 ? 'callout-danger' : '' }}"><strong>{{ summary.overdue_running }}</strong><span>running job{{ summary.overdue_running == 1 ? '' : 's' }} past the configured runtime</span></div>
+    </section>
+</div>
+
+<section class="panel">
+    <div class="panel-heading"><div><p class="eyebrow">Failure review</p><h2>Recent failed backups</h2></div><a href="/backup-runs?status=Failed">Filtered log</a></div>
+    {% if recentFailures is empty %}<div class="empty">No failed backup runs have been recorded.</div>{% else %}
+    <div class="table-wrap"><table><thead><tr><th>System</th><th>Type</th><th>Started</th><th>Location</th><th>Error</th></tr></thead><tbody>
+    {% for run in recentFailures %}<tr><td><strong>{{ run.system_name }}</strong></td><td>{{ run.backup_type }}</td><td>{{ run.started_at|utc_date }}</td><td><code>{{ run.storage_location }}</code></td><td class="error-text">{{ run.error_message|default('No error detail') }}</td></tr>{% endfor %}
+    </tbody></table></div>{% endif %}
+</section>
+{% endblock %}

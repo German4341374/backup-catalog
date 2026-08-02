@@ -1,0 +1,53 @@
+{
+  "name": "german4341374/backup-catalog",
+  "description": "A backup result catalog and operational health dashboard.",
+  "type": "project",
+  "license": "MIT",
+  "require": {
+    "php": "^8.5",
+    "ext-json": "*",
+    "ext-pdo": "*",
+    "ext-pdo_pgsql": "*",
+    "php-di/php-di": "^7.1",
+    "slim/psr7": "^1.8",
+    "slim/slim": "^4.15",
+    "twig/twig": "^3.28",
+    "vlucas/phpdotenv": "^5.6"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.95",
+    "phpstan/phpstan": "^2.2",
+    "phpunit/phpunit": "^13.2"
+  },
+  "autoload": {
+    "psr-4": {
+      "BackupCatalog\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "BackupCatalog\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "lint": "php-cs-fixer fix --dry-run --diff --ansi",
+    "format": "php-cs-fixer fix --ansi",
+    "analyse": "phpstan analyse --no-progress --debug",
+    "test": "phpunit",
+    "check": [
+      "@lint",
+      "@analyse",
+      "composer audit --locked --no-interaction",
+      "@test"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "php-http/discovery": false
+    },
+    "optimize-autoloader": true,
+    "sort-packages": true
+  },
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

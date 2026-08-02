@@ -1,0 +1,16 @@
+{
+  "runs": [
+    {
+      "system": "Customer CRM",
+      "job": "Nightly full",
+      "externalId": "example-crm-20260802-001",
+      "type": "Full",
+      "startedAt": "2026-08-02T01:00:00Z",
+      "completedAt": "2026-08-02T01:32:00Z",
+      "status": "Successful",
+      "sizeBytes": 21474836480,
+      "storageLocation": "vault://example/customer-crm/2026-08-02",
+      "errorMessage": null
+    }
+  ]
+}

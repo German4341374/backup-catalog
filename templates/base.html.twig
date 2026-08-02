@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>{% block title %}Backup Catalog{% endblock %}</title>
+    <link rel="stylesheet" href="/assets/app.css">
+</head>
+<body>
+<div class="app-shell">
+    <aside class="sidebar">
+        <a class="brand" href="/" aria-label="Backup Catalog dashboard">
+            <span class="brand-mark" aria-hidden="true">BC</span>
+            <span><strong>Backup Catalog</strong><small>Operations console</small></span>
+        </a>
+        <nav aria-label="Primary navigation">
+            <a href="/" class="{{ active|default('') == 'dashboard' ? 'active' : '' }}">Dashboard</a>
+            <a href="/systems" class="{{ active|default('') == 'systems' ? 'active' : '' }}">Systems</a>
+            <a href="/backup-runs" class="{{ active|default('') == 'runs' ? 'active' : '' }}">Backup runs</a>
+            <a href="/backup-runs/import">Import JSON</a>
+        </nav>
+        <div class="sidebar-foot"><span class="pulse"></span> Catalog service</div>
+    </aside>
+    <main>
+        {% if flash|default(null) %}
+            <div class="alert alert-{{ flash.type }}" role="status">{{ flash.message }}</div>
+        {% endif %}
+        {% block content %}{% endblock %}
+        <footer>Backup result registry only. This application does not perform backups.</footer>
+    </main>
+</div>
+</body>
+</html>

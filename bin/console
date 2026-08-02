@@ -1,0 +1,73 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use BackupCatalog\Application\Exception\ValidationException;
+use BackupCatalog\Application\Service\BackupImportService;
+use BackupCatalog\Application\Service\DashboardService;
+use BackupCatalog\Application\Service\DemoDataService;
+use BackupCatalog\Infrastructure\Database\Migrator;
+use DI\Container;
+use Dotenv\Dotenv;
+
+require dirname(__DIR__) . '/vendor/autoload.php';
+date_default_timezone_set('UTC');
+Dotenv::createImmutable(dirname(__DIR__))->safeLoad();
+/** @var Container $container */
+$container = require dirname(__DIR__) . '/config/container.php';
+
+$command = $argv[1] ?? 'help';
+$usage = <<<'TEXT'
+Backup Catalog CLI
+
+Usage:
+  php bin/console migrate
+  php bin/console import-backups <file.json>
+  php bin/console generate-demo
+  php bin/console check-overdue
+TEXT;
+
+try {
+    if ('help' === $command || '--help' === $command || '-h' === $command) {
+        fwrite(STDOUT, $usage . PHP_EOL);
+        exit(0);
+    }
+
+    $applied = $container->get(Migrator::class)->migrate();
+    switch ($command) {
+        case 'migrate':
+            fwrite(STDOUT, json_encode(['applied' => $applied], JSON_PRETTY_PRINT) . PHP_EOL);
+            break;
+        case 'import-backups':
+            if (!isset($argv[2])) {
+                fwrite(STDERR, "A JSON file path is required.\n");
+                exit(64);
+            }
+            $result = $container->get(BackupImportService::class)->importFile($argv[2]);
+            fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT) . PHP_EOL);
+            break;
+        case 'generate-demo':
+            $result = $container->get(DemoDataService::class)->generate();
+            fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT) . PHP_EOL);
+            break;
+        case 'check-overdue':
+            $dashboard = $container->get(DashboardService::class)->overview();
+            $result = [
+                'checkedAt' => gmdate(DATE_ATOM),
+                'overdueSystems' => $dashboard['overdueSystems'],
+                'overdueRunning' => $dashboard['overdueRunning'],
+            ];
+            fwrite(STDOUT, json_encode($result, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+            exit([] === $result['overdueSystems'] && [] === $result['overdueRunning'] ? 0 : 2);
+        default:
+            fwrite(STDERR, sprintf("Unknown command: %s\n\n%s\n", $command, $usage));
+            exit(64);
+    }
+} catch (ValidationException $exception) {
+    fwrite(STDERR, json_encode(['error' => 'validation_failed', 'fields' => $exception->errors()], JSON_PRETTY_PRINT) . PHP_EOL);
+    exit(1);
+} catch (Throwable $exception) {
+    fwrite(STDERR, json_encode(['error' => 'command_failed', 'detail' => $exception->getMessage()]) . PHP_EOL);
+    exit(1);
+}
