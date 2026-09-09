@@ -4,9 +4,11 @@
 [![PHP 8.5](https://img.shields.io/badge/PHP-8.5-777BB4?logo=php&logoColor=white)](https://www.php.net/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Backup Catalog is a compact operations application for registering and analyzing backup results. It gives support and infrastructure teams one place to see the last successful backup, stale systems, failed jobs, long-running executions, average backup size, and an auditable execution history.
+A place to keep backup results without digging through a different log for each system.
+You can record runs, import them from JSON, and see which systems haven't had a successful
+backup when expected.
 
-It is a result registry: it never connects to backup agents and never starts, stops, or modifies a backup.
+It only keeps track of results. It doesn't create backups or connect to backup agents.
 
 ![Backup Catalog dashboard](docs/screenshots/dashboard.png)
 
