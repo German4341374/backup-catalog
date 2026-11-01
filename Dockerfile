@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.10
 FROM composer:2.10.2@sha256:4d71c3c2109c61d5415544264b59ad4087e4c5b7244481723664138fd36d5040 AS composer_tools
 
-FROM php:8.5.9-fpm-alpine3.24@sha256:9dc81f4086ea5402227a6bcc489b04b4baba12394624d9621faa92ed812fb8ee AS base
+FROM php:8.5.12-fpm-alpine3.24@sha256:4c2818074ec49f6abe46620f3965e0cb75bc3a5f2b417edd1aacaba6f091c40e AS base
 
 RUN apk add --no-cache libpq \
     && apk add --no-cache --virtual .build-deps postgresql-dev \
